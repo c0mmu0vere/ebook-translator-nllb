@@ -35,6 +35,18 @@ model, tokenizer = None, None
 def load_models():
     global model, tokenizer
     model, tokenizer = load_model()
+
+    import torch
+    device = next(model.parameters()).device
+    if "cuda" in str(device):
+        logger.info(f"✅ El modelo está usando la GPU ({device})")
+        print(f"\n✅ El modelo está usando la GPU ({device})\n")
+    else:
+        logger.warning(
+            f"⚠️ El modelo está usando la CPU ({device}) - Traducción más lenta")
+        print(
+            f"\n⚠️ El modelo está usando la CPU ({device}) - Traducción más lenta\n")
+
     # Warmup: Traduce algo cortito para inicializar correctamente
     translate("Model warming up", model, tokenizer, "eng_Latn", "spa_Latn")
     logger.info("Modelo cargado y listo")
@@ -64,7 +76,8 @@ async def translate_endpoint(
         request_queue.append(request_id)
 
         logger.info(
-            f"[{request_id}] Inicio | Artículo: '{text[:50]}...' | Chars: {len(text)}")
+            f"[{request_id}] Inicio | Artículo: '{text[:50]}...' | Chars: {len(text)}"
+        )
 
         # Traducción por chunks
         if len(text) <= Config.CHUNK_SIZE:
